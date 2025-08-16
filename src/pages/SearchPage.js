@@ -1,4 +1,3 @@
-// src/pages/SearchPage.js
 import React, { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import styled from 'styled-components';
