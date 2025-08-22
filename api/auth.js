@@ -1,21 +1,26 @@
+import 'dotenv/config';
 import { createClient } from "@libsql/client";
-import bcrypt from 'bcrypt'; // 이 부분을 require에서 import로 변경했습니다.
-
-const db = createClient({
-  url: process.env.DATABASE_URL,
-  authToken: process.env.DATABASE_AUTH_TOKEN,
-});
+import bcrypt from 'bcrypt';
+import jwt from 'jsonwebtoken';
 
 export default async function handler(req, res) {
   if (req.method === 'POST') {
     try {
+      // Manually parse cookies from the header for maximum reliability
+      const cookies = req.headers.cookie ? 
+        Object.fromEntries(req.headers.cookie.split('; ').map(c => c.split('='))) : {};
+      
+      const db = createClient({
+        url: process.env.DATABASE_URL,
+        authToken: process.env.DATABASE_AUTH_TOKEN,
+      });
+
       const { username, password } = req.body;
 
       if (!username || !password) {
         return res.status(400).json({ message: 'Username and password are required' });
       }
 
-      // Fetch the admin user by username
       const result = await db.execute({
         sql: 'SELECT * FROM admins WHERE username = ?',
         args: [username],
@@ -26,13 +31,24 @@ export default async function handler(req, res) {
       }
 
       const user = result.rows[0];
-      
-      // Compare the provided password with the stored hashed password
       const passwordMatch = await bcrypt.compare(password, user.password);
 
       if (passwordMatch) {
-        // In a real application, you would generate a JWT token here
-        return res.status(200).json({ success: true, message: '로그인 성공' });
+        const payload = {
+          id: user.id,
+          username: user.username,
+          role: 'admin'
+        };
+
+        const token = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '30m' });
+
+        // SECURITY FIX: Send the token in an HttpOnly cookie
+        res.setHeader('Set-Cookie', `auth-token=${token}; HttpOnly; Path=/; Max-Age=${60 * 30}`);
+
+        return res.status(200).json({
+          success: true,
+          message: '로그인 성공'
+        });
       } else {
         return res.status(401).json({ success: false, message: 'ID 혹은 비밀번호가 맞지 않습니다.' });
       }

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
+import { jwtDecode } from 'jwt-decode'; // You'll need to install this library: `npm install jwt-decode`
 
 // Container for the entire page
 const EditItemContainer = styled.div`
@@ -189,6 +190,9 @@ export default function EditItemPage() {
   const { id } = useParams();
   const navigate = useNavigate();
 
+  // State for user's role
+  const [isAdmin, setIsAdmin] = useState(false);
+  
   // State for item data
   const [item, setItem] = useState({
     title: '',
@@ -209,6 +213,23 @@ export default function EditItemPage() {
 
   // State for user feedback messages
   const [message, setMessage] = useState('');
+
+  // Function to decode JWT from cookies (server-side rendering needed for this,
+  // but a simplified client-side check can be done for UI purposes)
+  const checkAdminStatus = () => {
+    try {
+      // In a real application, you would need a cookie-parsing solution or an API call
+      // to check the cookie's value. This is a simplified client-side check.
+      const token = document.cookie.split('; ').find(row => row.startsWith('auth-token='));
+      if (token) {
+        const decodedToken = jwtDecode(token.split('=')[1]);
+        setIsAdmin(decodedToken.role === 'admin');
+      }
+    } catch (error) {
+      console.error("Failed to decode token:", error);
+      setIsAdmin(false);
+    }
+  };
 
   const fetchAllData = async (itemId) => {
     try {
@@ -257,6 +278,7 @@ export default function EditItemPage() {
   };
 
   useEffect(() => {
+    checkAdminStatus();
     if (id) {
       fetchAllData(id);
     }
@@ -304,7 +326,10 @@ export default function EditItemPage() {
         setMessage('ID, 제목, 분기는 필수 입력 항목입니다.');
         return;
       }
-      endpoint = `/api/submit-requests`;
+      
+      // Determine endpoint based on admin status
+      endpoint = isAdmin ? `/api/process-requests` : `/api/submit-requests`;
+
       payload = {
         itemId: id,
         request_type: requestType,
@@ -313,14 +338,32 @@ export default function EditItemPage() {
           year: item.year.trim() === '' ? null : Number(item.year),
         },
       };
+      
+      // If admin, add action to payload for process-requests endpoint
+      if (isAdmin) {
+          payload.action = 'approve';
+      }
+      
     } else if (requestType === 'DELETE') {
-      endpoint = `/api/submit-requests`;
+      // Determine endpoint based on admin status
+      endpoint = isAdmin ? `/api/process-requests` : `/api/submit-requests`;
+      
       payload = {
         itemId: id,
         request_type: requestType,
       };
+      
+      // If admin, add action to payload for process-requests endpoint
+      if (isAdmin) {
+          payload.action = 'approve';
+      }
+
     } else if (requestType === 'OTT_UPDATE') {
+      // For OTT, we'll assume it's always submitted to the pending queue for review.
+      // If admin should be able to instantly apply, the endpoint would need to be different.
+      // Here we will use the original logic for simplicity.
       endpoint = `/api/submit-ott-request`;
+      
       payload = {
         animation_id: id,
         ott_urls: ottLinks.map(({ provider_id, url }) => ({ provider_id, url })),
@@ -340,7 +383,14 @@ export default function EditItemPage() {
       const data = await response.json();
 
       if (response.ok) {
-        setMessage(data.message || '요청이 성공적으로 접수되었습니다. 관리자 승인 후 반영됩니다.');
+        // Different success message for admin vs regular user
+        const successMessage = isAdmin
+          ? '요청이 즉시 반영되었습니다.'
+          : '요청이 성공적으로 접수되었습니다. 관리자 승인 후 반영됩니다.';
+
+        setMessage(data.message || successMessage);
+        
+        // Redirect after a short delay
         setTimeout(() => navigate('/'), 2000);
       } else {
         setMessage(data.error || '요청 접수에 실패했습니다.');
@@ -391,8 +441,14 @@ export default function EditItemPage() {
               </tbody>
             </Table>
             <ButtonContainer>
-              <Button type="submit">수정 요청 접수</Button>
-              <DeleteButton type="button" onClick={() => handleRequest('DELETE')}>삭제 요청 접수</DeleteButton>
+              <Button type="submit">
+                {isAdmin ? '수정 즉시 반영' : '수정 요청 접수'}
+              </Button>
+              {isAdmin && (
+                <DeleteButton type="button" onClick={() => handleRequest('DELETE')}>
+                  삭제 즉시 반영
+                </DeleteButton>
+              )}
             </ButtonContainer>
           </form>
 

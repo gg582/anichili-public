@@ -1,6 +1,6 @@
-// src/pages/PendingRequestsPage.js
 import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
+// jwtDecode is no longer needed here as isAdmin is passed as a prop.
 
 const PendingRequestsContainer = styled.div`
   padding: 40px;
@@ -64,14 +64,17 @@ const Message = styled.p`
   color: ${props => props.type === 'error' ? 'red' : 'green'};
 `;
 
-export default function PendingRequestsPage() {
+export default function PendingRequestsPage({ isAdmin }) {
   const [requests, setRequests] = useState([]);
   const [message, setMessage] = useState('');
+  const [loading, setLoading] = useState(true);
 
   // Fetches the list of pending requests
   const fetchRequests = async () => {
     try {
-      const response = await fetch('/api/get-pending-requests');
+      const response = await fetch('/api/get-pending-requests', {
+        credentials: 'include'
+      });
       if (response.ok) {
         const data = await response.json();
         setRequests(data);
@@ -81,33 +84,56 @@ export default function PendingRequestsPage() {
     } catch (error) {
       console.error('Error fetching requests:', error);
       setMessage('네트워크 오류가 발생했습니다.');
+    } finally {
+      setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchRequests();
-  }, []);
+    if (isAdmin) {
+      fetchRequests();
+    } else {
+      setLoading(false);
+    }
+  }, [isAdmin]);
 
-  // Handles approving or rejecting a request
   const handleAction = async (requestId, action) => {
     try {
       const response = await fetch('/api/process-request', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ requestId, action }),
+        credentials: 'include'
       });
 
       const data = await response.json();
       if (response.ok) {
         setMessage(data.message);
-        fetchRequests(); // Refresh the list
+        fetchRequests();
       } else {
-        setMessage(data.error);
+        setMessage(data.error || '요청 처리 중 오류가 발생했습니다.');
       }
     } catch (error) {
-      setMessage('요청 처리 중 오류가 발생했습니다.');
+      setMessage('네트워크 오류가 발생했습니다.');
     }
   };
+
+  if (loading) {
+    return (
+      <PendingRequestsContainer>
+        <p>로딩 중...</p>
+      </PendingRequestsContainer>
+    );
+  }
+
+  if (!isAdmin) {
+    return (
+      <PendingRequestsContainer>
+        <PageTitle>접근 권한 없음</PageTitle>
+        <p>관리자만 접근할 수 있는 페이지입니다. 로그인 후 다시 시도해 주세요.</p>
+      </PendingRequestsContainer>
+    );
+  }
 
   return (
     <PendingRequestsContainer>
@@ -118,11 +144,11 @@ export default function PendingRequestsPage() {
           <thead>
             <tr>
               <TableHeader>ID</TableHeader>
-              <TableHeader>아이템 ID</TableHeader>
-              <TableHeader>요청 타입</TableHeader>
-              <TableHeader>요청 데이터</TableHeader>
-              <TableHeader>생성일</TableHeader>
-              <TableHeader>액션</TableHeader>
+              <TableHeader>Item ID</TableHeader>
+              <TableHeader>Request Type</TableHeader>
+              <TableHeader>Request Data</TableHeader>
+              <TableHeader>Created At</TableHeader>
+              <TableHeader>Action</TableHeader>
             </tr>
           </thead>
           <tbody>

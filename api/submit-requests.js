@@ -1,4 +1,3 @@
-// /api/submit-request.js
 import { createClient } from "@libsql/client";
 
 const dbClient = createClient({
@@ -12,17 +11,26 @@ export default async function handler(req, res) {
     }
 
     try {
-        const { itemId, request_type, request_data } = req.body;
+        const { request_type, request_data } = req.body;
+        
+        if (!request_type) {
+            return res.status(400).json({ error: 'request_type is required.' });
+        }
+        
+        // Determine the item_id based on the request type
+        // Use null for new additions and the provided id for edits/deletes
+        const itemId = request_type === 'ADD' ? null : request_data?.id;
 
-        if (!itemId || !request_type) {
-            return res.status(400).json({ error: 'itemId and request_type are required.' });
+        const contributor = request_data?.contributor;
+        if (!contributor) {
+            return res.status(400).json({ error: 'Contributor is required.' });
         }
 
-        const dataString = request_data ? JSON.stringify(request_data) : null;
+        const dataString = JSON.stringify(request_data);
 
         await dbClient.execute({
-            sql: 'INSERT INTO pending_requests (item_id, request_type, request_data) VALUES (?, ?, ?)',
-            args: [itemId, request_type, dataString],
+            sql: 'INSERT INTO pending_requests (item_id, request_type, request_data, contributor) VALUES (?, ?, ?, ?)',
+            args: [itemId, request_type, dataString, contributor],
         });
 
         return res.status(201).json({ message: '요청이 성공적으로 접수되었습니다. 관리자 승인 후 반영됩니다.' });

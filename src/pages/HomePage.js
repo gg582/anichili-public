@@ -1,3 +1,4 @@
+// src/pages/HomePage.js
 import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import AnimationDetailModal from '../components/AnimationDetailModal'; 

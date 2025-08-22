@@ -67,14 +67,14 @@ const AdminLogin = ({ onLogin }) => {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username, password }),
+        credentials: 'include' 
       });
-      const data = await response.json();
 
-      if (response.ok && data.success) {
+      if (response.ok) {
         setStatus({ message: '로그인 성공!', success: true });
-        localStorage.setItem('adminLoggedIn', 'true');
         onLogin();
       } else {
+        const data = await response.json();
         setStatus({ message: data.message || '로그인 실패', success: false });
       }
     } catch (error) {
