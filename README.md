@@ -57,6 +57,8 @@ npm run dev
 
 브라우저에서 [http://localhost:3000](http://localhost:3000) 접속.
 
+## 이슈: JWT 토큰 미발행
+
 ## 기여
 
 * **버그 제보 및 기능 제안**: GitHub Issues 이용

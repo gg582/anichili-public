@@ -1,7 +1,5 @@
-// src/pages/LoginPage.js
 import React, { useState } from 'react';
 import styled from 'styled-components';
-import { useNavigate } from 'react-router-dom';
 
 const LoginContainer = styled.div`
   display: flex;
@@ -9,7 +7,6 @@ const LoginContainer = styled.div`
   align-items: center;
   height: 80vh;
 `;
-
 
 const LoginForm = styled.form`
   display: flex;
@@ -25,8 +22,14 @@ const LoginForm = styled.form`
 const Input = styled.input`
   padding: 10px;
   font-size: 1em;
-  border: 1px solid #ccc;
+  border: 1px solid #ffbadc;
   border-radius: 5px;
+  font-weight: ${(props) => (props.isClicked ? 'bold' : 'normal')};
+  &: focus {
+    outline: none;
+    border: 2px;
+    border-color: #ff69b4;
+  }
 `;
 
 const Button = styled.button`
@@ -52,7 +55,7 @@ const LoginPage = ({ onLoginSuccess }) => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
-  const navigate = useNavigate();
+  const [isClicked, setIsClicked] = useState(false); 
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -65,14 +68,13 @@ const LoginPage = ({ onLoginSuccess }) => {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ username, password }),
+        credentials: 'include'
       });
 
-      const data = await response.json();
-
-      if (data.success) {
+      if (response.ok) {
         onLoginSuccess();
-        navigate('/');
       } else {
+        const data = await response.json();
         setError(data.message);
       }
     } catch (err) {
@@ -91,12 +93,16 @@ const LoginPage = ({ onLoginSuccess }) => {
           placeholder="사용자명"
           value={username}
           onChange={(e) => setUsername(e.target.value)}
+          onClick={() => setIsClicked(true)} // 클릭 시 상태 변경
+          isClicked={isClicked}
         />
         <Input
           type="password"
           placeholder="비밀번호"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
+          onClick={() => setIsClicked(true)}
+          isClicked={isClicked}
         />
         <Button type="submit">로그인</Button>
       </LoginForm>

@@ -1,22 +1,29 @@
 import { createClient } from "@libsql/client";
 
-const db = createClient({
-  url: process.env.DATABASE_URL,
-  authToken: process.env.DATABASE_AUTH_TOKEN,
-});
-
 export default async function handler(req, res) {
-  // Only allow GET requests
   if (req.method !== 'GET') {
     res.setHeader('Allow', ['GET']);
     return res.status(405).end(`Method ${req.method} Not Allowed`);
   }
 
   try {
-    // Fetch all animations from the 'animations' table
-    const result = await db.execute('SELECT * FROM animations ORDER BY year DESC, season DESC, created_at DESC');
+    // The fix: Initialize the db client inside the handler function.
+    const db = createClient({
+      url: process.env.DATABASE_URL,
+      authToken: process.env.DATABASE_AUTH_TOKEN,
+    });
+    
+    const { _page, _limit } = req.query;
 
-    // Return the fetched data as JSON
+    const page = parseInt(_page, 10) || 1;
+    const limit = parseInt(_limit, 10) || 20;
+    const offset = (page - 1) * limit;
+
+    const result = await db.execute({
+      sql: 'SELECT * FROM animations ORDER BY year DESC, season DESC, created_at DESC LIMIT ? OFFSET ?',
+      args: [limit, offset],
+    });
+
     res.status(200).json(result.rows);
   } catch (error) {
     console.error("Failed to fetch animations:", error);

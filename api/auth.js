@@ -6,10 +6,6 @@ import jwt from 'jsonwebtoken';
 export default async function handler(req, res) {
   if (req.method === 'POST') {
     try {
-      // Manually parse cookies from the header for maximum reliability
-      const cookies = req.headers.cookie ? 
-        Object.fromEntries(req.headers.cookie.split('; ').map(c => c.split('='))) : {};
-      
       const db = createClient({
         url: process.env.DATABASE_URL,
         authToken: process.env.DATABASE_AUTH_TOKEN,
@@ -40,10 +36,10 @@ export default async function handler(req, res) {
           role: 'admin'
         };
 
-        const token = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '30m' });
+        const token = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '1h' });
 
-        // SECURITY FIX: Send the token in an HttpOnly cookie
-        res.setHeader('Set-Cookie', `auth-token=${token}; HttpOnly; Path=/; Max-Age=${60 * 30}`);
+        // --- FINAL FIX: Add the Secure flag for production HTTPS ---
+        res.setHeader('Set-Cookie', `auth-token=${token}; HttpOnly; Path=/; Max-Age=${60 * 30}; Secure; SameSite=Lax`);
 
         return res.status(200).json({
           success: true,

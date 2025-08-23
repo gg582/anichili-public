@@ -22,7 +22,6 @@ function App() {
   const [isAdmin, setIsAdmin] = useState(false);
   const navigate = useNavigate();
 
-  // Helper function to check admin status from the cookie
   const checkAdminStatus = () => {
     try {
       const cookieString = document.cookie;
@@ -44,13 +43,13 @@ function App() {
     return false;
   };
 
-  // Check login status on app load
   useEffect(() => {
     checkAdminStatus();
   }, []);
 
   const handleLoginSuccess = () => {
     checkAdminStatus();
+    setIsAdmin(true);
     navigate('/');
   };
 

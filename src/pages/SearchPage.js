@@ -13,12 +13,6 @@ const Title = styled.h2`
   margin-bottom: 40px;
 `;
 
-const ResultsCount = styled.p`
-  text-align: center;
-  margin-bottom: 20px;
-  font-size: 1.1em;
-  color: #666;
-`;
 
 const YearSection = styled.div`
   margin-bottom: 50px;

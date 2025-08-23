@@ -162,20 +162,6 @@ const DeleteButton = styled.button`
 `;
 
 // Labels for form fields
-const fieldLabels = {
-  title: '제목',
-  image: '이미지 URL',
-  year: '연도',
-  season: '분기',
-  pv_url: 'PV URL',
-  opening_url: '오프닝 URL',
-  ending_url: '엔딩 URL',
-  contributor: '기여자',
-};
-
-// Season options for the select dropdown
-const seasonOptions = ['1분기', '2분기', '3분기', '4분기'];
-
 export default function ContributePage() {
   const [isAdmin, setIsAdmin] = useState(false);
   const [animations, setAnimations] = useState([]);

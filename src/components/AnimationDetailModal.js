@@ -157,7 +157,7 @@ const AnimationDetailModal = ({ animation, onClose, isAdmin }) => {
     if (animation && animation.id) {
       const fetchLinks = async () => {
         try {
-          const response = await fetch(`/api/get-ott-links?id=${animation.id}`);
+          const response = await fetch(`/api/get-details?id=${animation.id}&type=ott-links`);
           if (response.ok) {
             const data = await response.json();
             setOttLinks(data);
