@@ -1,6 +1,6 @@
 import 'dotenv/config';
 import { createClient } from "@libsql/client";
-import bcrypt from 'bcrypt';
+import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 
 export default async function handler(req, res) {
@@ -36,10 +36,14 @@ export default async function handler(req, res) {
           role: 'admin'
         };
 
-        const token = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '1h' });
+        const token = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '30m' });
+        
+        // --- FINAL FIX: Conditionally set Secure and SameSite flags
+        const isProduction = process.env.NODE_ENV === 'production';
+        const cookieOptions = `HttpOnly; Path=/; Max-Age=${60 * 30};`;
+        const secureOptions = isProduction ? 'Secure; SameSite=Lax' : '';
 
-        // --- FINAL FIX: Add the Secure flag for production HTTPS ---
-        res.setHeader('Set-Cookie', `auth-token=${token}; HttpOnly; Path=/; Max-Age=${60 * 30}; Secure; SameSite=Lax`);
+        res.setHeader('Set-Cookie', `auth-token=${token}; ${cookieOptions} ${secureOptions}`);
 
         return res.status(200).json({
           success: true,

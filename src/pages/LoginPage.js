@@ -23,8 +23,13 @@ const LoginForm = styled.form`
 const Input = styled.input`
   padding: 10px;
   font-size: 1em;
-  border: 1px solid #ff69b4;
+  border: 1px solid #ccc;
   border-radius: 5px;
+  
+  &:focus {
+    outline: none;
+    border-color: #ff69b4;
+  }
 `;
 
 const Button = styled.button`
@@ -46,17 +51,10 @@ const ErrorMessage = styled.p`
   text-align: center;
 `;
 
-// Helper function to check if the auth-token cookie exists
-const checkAuthCookie = () => {
-    const cookieString = document.cookie;
-    return cookieString.split('; ').some(row => row.startsWith('auth-token='));
-};
-
 const LoginPage = ({ onLoginSuccess }) => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
-  const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -73,14 +71,7 @@ const LoginPage = ({ onLoginSuccess }) => {
       });
 
       if (response.ok) {
-        // --- THIS IS THE FIX: Check for the cookie's existence
-        if (checkAuthCookie()) {
-            onLoginSuccess();
-        } else {
-            // If the response is OK but no cookie, something is wrong.
-            // We should treat this as a failure.
-            setError("쿠키 검증 실패: 보안 토큰이 발급되지 않았습니다.");
-        }
+        onLoginSuccess();
       } else {
         const data = await response.json();
         setError(data.message);
