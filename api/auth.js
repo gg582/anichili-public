@@ -2,7 +2,8 @@ import 'dotenv/config';
 import { createClient } from '@libsql/client';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
-import cookie from 'cookie';
+const cookie = require('cookie');
+
 
 // Main handler for POST requests to /api/auth
 export default async function handler(req, res) {

@@ -26,6 +26,11 @@ const Input = styled.input`
   font-size: 1em;
   border: 1px solid #ff69b4;
   border-radius: 5px;
+  &:focus {
+    outline: none;
+    border-colkor: #ff69b4;
+    boder: 2px solid;
+  }
 `;
 
 const Button = styled.button`
