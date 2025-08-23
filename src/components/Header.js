@@ -120,10 +120,15 @@ const SearchForm = styled.form`
 const SearchInput = styled.input`
   padding: 8px 12px;
   border-radius: 5px;
-  border: 1px solid #ddd;
+  border: 1px solid #ff69b4;
   font-size: 1em;
   width: 200px;
   margin-right: 10px;
+  
+  &:focus {
+    outline: none;
+    border: 2px solid #ff69b4;
+  }
 
   @media (max-width: 768px) {
     width: 70%;
