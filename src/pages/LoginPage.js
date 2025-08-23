@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import styled from 'styled-components';
+import { useNavigate } from 'react-router-dom';
 
 const LoginContainer = styled.div`
   display: flex;
@@ -22,14 +23,8 @@ const LoginForm = styled.form`
 const Input = styled.input`
   padding: 10px;
   font-size: 1em;
-  border: 1px solid #ffbadc;
+  border: 1px solid #ff69b4;
   border-radius: 5px;
-  font-weight: ${(props) => (props.isClicked ? 'bold' : 'normal')};
-  &: focus {
-    outline: none;
-    border: 2px;
-    border-color: #ff69b4;
-  }
 `;
 
 const Button = styled.button`
@@ -51,11 +46,17 @@ const ErrorMessage = styled.p`
   text-align: center;
 `;
 
+// Helper function to check if the auth-token cookie exists
+const checkAuthCookie = () => {
+    const cookieString = document.cookie;
+    return cookieString.split('; ').some(row => row.startsWith('auth-token='));
+};
+
 const LoginPage = ({ onLoginSuccess }) => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
-  const [isClicked, setIsClicked] = useState(false); 
+  const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -72,7 +73,14 @@ const LoginPage = ({ onLoginSuccess }) => {
       });
 
       if (response.ok) {
-        onLoginSuccess();
+        // --- THIS IS THE FIX: Check for the cookie's existence
+        if (checkAuthCookie()) {
+            onLoginSuccess();
+        } else {
+            // If the response is OK but no cookie, something is wrong.
+            // We should treat this as a failure.
+            setError("쿠키 검증 실패: 보안 토큰이 발급되지 않았습니다.");
+        }
       } else {
         const data = await response.json();
         setError(data.message);
@@ -93,16 +101,12 @@ const LoginPage = ({ onLoginSuccess }) => {
           placeholder="사용자명"
           value={username}
           onChange={(e) => setUsername(e.target.value)}
-          onClick={() => setIsClicked(true)} // 클릭 시 상태 변경
-          isClicked={isClicked}
         />
         <Input
           type="password"
           placeholder="비밀번호"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
-          onClick={() => setIsClicked(true)}
-          isClicked={isClicked}
         />
         <Button type="submit">로그인</Button>
       </LoginForm>
