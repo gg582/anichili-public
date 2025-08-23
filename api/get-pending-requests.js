@@ -16,6 +16,11 @@ const verify = (req) => {
     }
 }
 
+const dbClient = createClient({
+    url: process.env.DATABASE_URL,
+    authToken: process.env.DATABASE_AUTH_TOKEN,
+});
+
 export default async function handler(req, res) {
     if (req.method !== 'GET') {
         return res.status(405).json({ error: 'Method Not Allowed' });
@@ -27,11 +32,6 @@ export default async function handler(req, res) {
     }
 
     try {
-        const dbClient = createClient({
-            url: process.env.DATABASE_URL,
-            authToken: process.env.DATABASE_AUTH_TOKEN,
-        });
-
         const result = await dbClient.execute({
             sql: 'SELECT * FROM pending_requests ORDER BY created_at DESC',
             args: [],
