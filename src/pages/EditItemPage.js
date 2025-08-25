@@ -234,9 +234,9 @@ export default function EditItemPage() {
   const fetchAllData = async (itemId) => {
     try {
       const [itemResponse, providersResponse, linksResponse] = await Promise.all([
-        fetch(`/api/get-item?id=${itemId}`),
-        fetch('/api/get-ott-providers'),
         fetch(`/api/get-details?id=${itemId}&type=item`),
+        fetch('/api/get-ott-providers'),
+        fetch(`/api/get-details?id=${itemId}&type=ott-link`)
       ]);
 
       // Handle item data
