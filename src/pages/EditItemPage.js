@@ -329,21 +329,11 @@ export default function EditItemPage() {
       
       // Determine endpoint based on admin status
       endpoint = isAdmin ? `/api/process-requests` : `/api/submit-requests`;
-
-      payload = {
-        itemId: id,
-        request_type: requestType,
-        request_data: {
-          ...item,
-          year: item.year.trim() === '' ? null : Number(item.year),
-        },
+       payload = {
+        ...item,
+        year: item.year.trim() === '' ? null : Number(item.year),
       };
-      
-      // If admin, add action to payload for process-requests endpoint
-      if (isAdmin) {
-          payload.action = 'approve';
-      }
-      
+
     } else if (requestType === 'DELETE') {
       // Determine endpoint based on admin status
       endpoint = isAdmin ? `/api/process-requests` : `/api/submit-requests`;
